@@ -106,9 +106,8 @@ app.get('/',function(req,res){
 });
 
 // 在 localhost 走 8080 port
-var server = app.listen(process.env.PORT || 8080, function() {
-    var port = server.address().port;
-    console.log("My Line bot App running on port", port);
+app.listen(process.env.PORT || 80, function () {
+	console.log('LineBot is running.');
 });
 
 function clientUser(ID, receiveMsg) {

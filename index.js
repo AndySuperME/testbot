@@ -117,14 +117,9 @@ function clientUser(ID, receiveMsg) {
 
 // 主動發送訊息給 Client App
 setTimeout(function() {
-    //var userId = config.clientAppUserID;
-    //var sendMsg = "push msg to one user";
-    //bot.push('U4575fdaaae002fb2b9b67be60354de7c', [sendMsg]);
-    //console.log('userId: ' + userId);
-    //console.log('send: ' + sendMsg);
-
-
-}, 5000);
+    var sendMsg = "歡迎使用即時訊息推播通知！！使用方法如下：\n 查看即時訊息-> Location:地點 \n 設定自動通知-> setloaction:地點";
+    bot.push('U4575fdaaae002fb2b9b67be60354de7c', [sendMsg]);
+}, 1000);
 
 function sendPMMsg(ID, city) {
     SITE_NAME = city;

@@ -1,13 +1,42 @@
 var linebot = require('linebot'),
-    express = require('express');
+    express = require('express'),
+    weatherTW = require('weather-taiwan');
 
 var SITE_NAME = '西屯';
+
+var country, siteName, pmData, aqiStatus, lName, temp, humd;;
 const rp = require('request-promise');
 const aqiOpt = {
     uri: "http://opendata2.epa.gov.tw/AQI.json",
     json: true
 }; 
 
+
+var myLineTemplate={
+    type: 'template',
+    altText: 'this is a confirm template',
+    template: {
+        type: 'buttons',
+        text: '按下選單可以查看目前PM2.5！\n輸入？即可再次出現選單',
+        actions: [{
+            type: 'postback',
+            label: '臺南市關廟區',
+            data: '臺南,關廟',
+        }, {
+            type: 'postback',
+            label: '臺南市歸仁區',
+            data: '臺南,媽廟',
+        }, {
+            type: 'postback',
+            label: '南投縣魚池鄉',
+            data: '南投,魚池',
+        }, {
+            type: 'postback',
+            label: '高雄市左營區',
+            data: '左營,左營',
+        }]
+    }
+};
 
 var bot = linebot({
     channelId: process.env.CHANNEL_ID,
@@ -26,6 +55,7 @@ function readAQI(repos){
     return data;
 }
 
+
 var clientID, clientArray = [];
 bot.on('message', function(event) {
     // 把收到訊息的 event 印出來
@@ -42,6 +72,7 @@ bot.on('message', function(event) {
     //console.debug("Push : ", clientArray[0].receiveMsg);
     if (event.message.type = 'text') {
         msg = event.message.text;
+        if (msg == '?' || '？') msg += ':';
         var tmp = msg.substring(0, msg.indexOf(':'));
         var tmpdata = msg.substring(msg.indexOf(':')+1, msg.length);
         console.log("======="+tmpdata+"=====");
@@ -76,6 +107,14 @@ bot.on('message', function(event) {
                     }
                 }
                 break;
+
+            case '？':
+                event.reply(myLineTemplate);
+                break;
+
+            case '?':
+                event.reply(myLineTemplate);
+                break;
         }
         /*
         msg = event.message.text;;
@@ -89,6 +128,15 @@ bot.on('message', function(event) {
         */
     }
 });
+
+bot.on('postback', function (event) {
+    var city = event.postback.data.substring(0, event.postback.data.indexOf(','));
+    var locationName = event.postback.data.substring(event.postback.data.indexOf(',')+1, event.postback.data.length);
+    clientID = event.source.userId;
+    event.reply(sendPMMsg(clientID, city, locationName));
+
+    console.debug( clientID + " 按下:" + city + '/' + locationName);
+}) 
 
 const linebotParser = bot.parser(),
     app = express();
@@ -106,7 +154,7 @@ app.get('/',function(req,res){
 });
 
 // 在 localhost 走 8080 port
-app.listen(process.env.PORT || 80, function () {
+app.listen(process.env.PORT || 8080, function () {
 	console.log('LineBot is running.');
 });
 
@@ -117,27 +165,54 @@ function clientUser(ID, receiveMsg) {
 
 // 主動發送訊息給 Client App
 setTimeout(function() {
-    var sendMsg = "歡迎使用即時訊息推播通知！！使用方法如下：\n 查看即時訊息-> Location:地點 \n 設定自動通知-> setloaction:地點";
+    var sendMsg = myLineTemplate;
     bot.push('U4575fdaaae002fb2b9b67be60354de7c', [sendMsg]);
 }, 1000);
 
-function sendPMMsg(ID, city) {
+
+function sendPMMsg(ID, city, locationName) {
     SITE_NAME = city;
     let data;
         rp(aqiOpt)
         .then(function (repos) {
-            data = readAQI(repos);
-            var sendMsg = "push msg to one user";
-            bot.push(ID, data.County + data.SiteName +
-            '\n\nPM2.5指數：'+ data["PM2.5_AVG"] + 
-            '\n狀態：' + data.Status)
-           
+            aqiData = readAQI(repos);
+            country = aqiData.County;
+            siteName = aqiData.SiteName;
+            pmData = aqiData["PM2.5_AVG"];
+            aqiStatus = aqiData.Status; 
+            lName = locationName;
+            /*
+            bot.push(ID, aqiData.County + aqiData.SiteName +
+            '\n\nPM2.5指數：'+ aqiData["PM2.5_AVG"] + 
+            '\n狀態：' + aqiData.Status);
+           */
+          getWeather(locationName);
+          setTimeout(function(){
+                bot.push(clientID, country + siteName +
+                locationName +
+                '\n\nPM2.5指數：'+ pmData + 
+                '\n狀態：' + aqiStatus + '\n溫度：' + temp +
+                '\n濕度：' + humd);
+                console.log('2 : ' + temp)
+          },1000);
         })
         .catch(function (err) {
             event.reply('無法取得空氣品質資料～');
         });
 }
 
-function autoSenMsg() {
 
+function getWeather(locationName) {
+    var arr;
+        var fetcher = weatherTW.fetch('CWB-BF22D64C-B980-47DF-9ED6-CFD09D59B815');
+        var Wparser = weatherTW.parse();
+        Wparser.on('data', function(data) {
+            arr = data.locationName.indexOf(locationName);            
+            if (arr != -1) {
+                temp = data.elements.TEMP;
+                humd = data.elements.HUMD;
+                console.debug("1 : " + temp + "  " + humd);
+            }
+        });
+    fetcher.pipe(Wparser);
 }

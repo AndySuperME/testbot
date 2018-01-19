@@ -39,14 +39,15 @@ var myLineTemplate={
 };
 
 var bot = linebot({
-	/*
+	
     channelId: process.env.CHANNEL_ID,
 	channelSecret: process.env.CHANNEL_SECRET,
 	channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN
-	*/
+	/*
 	channelId: '1556996237',
 	channelSecret: '0464edc12c0dd4529fa7dc87e3792d8b',
 	channelAccessToken: 'nHad2FGf4a19Fcc1CRLjMsGdUXkAxEg0n1eL3KNqRHGDP3MIJ1cktzTNur+taQQMPaKOB/2vZB1yfLF5MfcUAQlIuo+cX7mC399dvC0PDlGmy2rMjmFu4gP0i4YAg96/QDGrszN613IoIRRb/EZy6AdB04t89/1O/w1cDnyilFU='
+	*/
 });
 
 function readAQI(repos){

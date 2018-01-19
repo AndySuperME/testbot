@@ -1,9 +1,9 @@
 var linebot = require('linebot'),
     express = require('express');
 
-var SITE_NAME = '西屯';
+var SITE_NAME = '西屯', SITE_NAME2 = '';
 
-var country, siteName, pmData, aqiStatus, lName, temp, humd;
+var country, siteName, pmData, aqiStatus, lName, temp, humd, weather, date;
 const rp = require('request-promise');
 const rp2 = require('request-promise');
 const aqiOpt = {
@@ -24,20 +24,16 @@ var myLineTemplate={
         text: '按下選單可以查看目前PM2.5！\n輸入？即可再次出現選單',
         actions: [{
             type: 'postback',
-            label: '臺南市關廟區',
-            data: '臺南,關廟',
+            label: '臺南市',
+            data: '臺南,臺南',
         }, {
             type: 'postback',
-            label: '臺南市歸仁區',
-            data: '臺南,媽廟',
+            label: '南投縣日月潭',
+            data: '南投,日月潭',
         }, {
             type: 'postback',
-            label: '南投縣魚池鄉',
-            data: '南投,魚池',
-        }, {
-            type: 'postback',
-            label: '高雄市左營區',
-            data: '左營,左營',
+            label: '高雄市左營',
+            data: '左營,高雄',
         }]
     }
 };
@@ -62,7 +58,7 @@ function readAQI(repos){
 function readWEATHER(repos) {
     let data;    
     for (i in repos) {
-        if (repos[i].SiteName == SITE_NAME) {
+        if (repos[i].SiteName == SITE_NAME2) {
             data = repos[i];
             break;
         }
@@ -131,16 +127,6 @@ bot.on('message', function(event) {
                 event.reply(myLineTemplate);
                 break;
         }
-        /*
-        msg = event.message.text;;
-        event.reply(msg).then(function(data) {
-            // success
-            console.log(msg);
-        }).catch(function(error) {
-            // error
-            console.log('error');
-        });
-        */
     }
 });
 
@@ -195,6 +181,7 @@ setTimeout(function() {
 
 function sendPMMsg(ID, city, locationName) {
     SITE_NAME = city;
+    SITE_NAME2 = locationName;
     let data;
         rp(aqiOpt)
         .then(function (repos) {
@@ -214,12 +201,15 @@ function sendPMMsg(ID, city, locationName) {
             weatherData = readWEATHER(repos);
             temp = weatherData.Temperature;
             humd = weatherData.Moisture;
+            weather = weatherData.Weather;
+            date = weatherData.DataCreationDate;
         }).then(function(){
             bot.push(clientID, country + siteName +
                 locationName +
                 '\n\nPM2.5指數：'+ pmData + 
                 '\n狀態：' + aqiStatus + '\n溫度：' + temp +
-                '\n濕度：' + humd);
+                '\n濕度：' + humd + '\n狀況：' + weather + 
+                '\n更新時間：' + date);
                 console.log('2 : ' + temp)
         })
 }

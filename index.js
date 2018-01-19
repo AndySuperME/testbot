@@ -1,15 +1,19 @@
 var linebot = require('linebot'),
-    express = require('express'),
-    weatherTW = require('weather-taiwan');
+    express = require('express');
 
 var SITE_NAME = '西屯';
 
-var country, siteName, pmData, aqiStatus, lName, temp, humd;;
+var country, siteName, pmData, aqiStatus, lName, temp, humd;
 const rp = require('request-promise');
+const rp2 = require('request-promise');
 const aqiOpt = {
     uri: "http://opendata2.epa.gov.tw/AQI.json",
     json: true
 }; 
+const weatherOpt = {
+    uri: "http://opendata.epa.gov.tw/ws/Data/ATM00698/?$format=json",
+    json: true
+}
 
 
 var myLineTemplate={
@@ -45,6 +49,17 @@ var bot = linebot({
 });
 
 function readAQI(repos){
+    let data;    
+    for (i in repos) {
+        if (repos[i].SiteName == SITE_NAME) {
+            data = repos[i];
+            break;
+        }
+    }
+    return data;
+}
+
+function readWEATHER(repos) {
     let data;    
     for (i in repos) {
         if (repos[i].SiteName == SITE_NAME) {
@@ -151,6 +166,14 @@ app.get('/',function(req,res){
     .catch(function (err) {
 		res.send("無法取得空氣品質資料～");
     });
+    
+    rp2(weatherOpt)
+    .then(function (repos) {
+        res.render('index', {WEATHER:readWEATHER(repos)});
+    })
+    .catch(function (err) {
+		res.send("無法取得天氣資料～");
+    });
 });
 
 // 在 localhost 走 8080 port
@@ -181,38 +204,22 @@ function sendPMMsg(ID, city, locationName) {
             pmData = aqiData["PM2.5_AVG"];
             aqiStatus = aqiData.Status; 
             lName = locationName;
-            /*
-            bot.push(ID, aqiData.County + aqiData.SiteName +
-            '\n\nPM2.5指數：'+ aqiData["PM2.5_AVG"] + 
-            '\n狀態：' + aqiData.Status);
-           */
-          getWeather(locationName);
-          setTimeout(function(){
-                bot.push(clientID, country + siteName +
+        })
+        .catch(function (err) {
+            event.reply('無法取得空氣品質資料～');
+        });
+        
+        rp2(weatherOpt)
+        .then(function (repos) {
+            weatherData = readWEATHER(repos);
+            temp = weatherData.Temperature;
+            humd = weatherData.Moisture;
+        }).then(function(){
+            bot.push(clientID, country + siteName +
                 locationName +
                 '\n\nPM2.5指數：'+ pmData + 
                 '\n狀態：' + aqiStatus + '\n溫度：' + temp +
                 '\n濕度：' + humd);
                 console.log('2 : ' + temp)
-          },1000);
         })
-        .catch(function (err) {
-            event.reply('無法取得空氣品質資料～');
-        });
-}
-
-
-function getWeather(locationName) {
-    var arr;
-        var fetcher = weatherTW.fetch('CWB-BF22D64C-B980-47DF-9ED6-CFD09D59B815');
-        var Wparser = weatherTW.parse();
-        Wparser.on('data', function(data) {
-            arr = data.locationName.indexOf(locationName);            
-            if (arr != -1) {
-                temp = data.elements.TEMP;
-                humd = data.elements.HUMD;
-                console.debug("1 : " + temp + "  " + humd);
-            }
-        });
-    fetcher.pipe(Wparser);
 }

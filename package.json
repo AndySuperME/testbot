@@ -1,5 +1,5 @@
 {
-  "name": "node-js-line-bot",
+  "name": "node-botjs-line-",
   "version": "0.1.0",
   "description": "A sample Node.js linebot app",
   "engines": {
@@ -10,8 +10,7 @@
     "express": "^4.15.2",
     "ejs": "^2.5.7",
     "request": "^2.83.0",
-    "request-promise": "^4.2.2",
-    "weather-taiwan":"^1.0.6"
+    "request-promise": "^4.2.2"
   },
   "keywords": [
     "linebot",

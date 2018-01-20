@@ -1,9 +1,12 @@
 var linebot = require('linebot'),
-    express = require('express');
+    express = require('express'),
+    ping = require('ping'),
+    dateFormat = require('dateformat');
 
-var SITE_NAME = '西屯', SITE_NAME2 = '';
+var SITE_NAME = '西屯', SITE_NAME2 = '', SITE_NAME3 = '';
 
 var country, siteName, pmData, aqiStatus, lName, temp, humd, weather, date;
+var setNotifylocation;
 const rp = require('request-promise');
 const rp2 = require('request-promise');
 const aqiOpt = {
@@ -66,6 +69,19 @@ function readWEATHER(repos) {
     return data;
 }
 
+function readWEATHER3(repos) {
+    let data;    
+    SITE_NAME3 = clientArray[0].setWeather;
+    console.log("       pppp   " + SITE_NAME3);
+    for (i in repos) {
+        if (repos[i].SiteName == SITE_NAME3) {
+            data = repos[i];
+            break;
+        }
+    }
+    return data;
+}
+
 
 var clientID, clientArray = [];
 bot.on('message', function(event) {
@@ -73,11 +89,11 @@ bot.on('message', function(event) {
     console.log(event.source.userId);
     clientID = event.source.userId;
     if (clientArray.length == 0) {
-        clientArray.push(new clientUser(clientID, ''));
+        clientArray.push(new clientUser(clientID, '', ''));
     }
     for (var i = 0 ; i < clientArray.length ; i++) {
         if (clientArray[i].ID != clientID){
-            clientArray.push(new clientUser(clientID, ''));
+            clientArray.push(new clientUser(clientID, '', ''));
         }
     }
     //console.debug("Push : ", clientArray[0].receiveMsg);
@@ -85,7 +101,7 @@ bot.on('message', function(event) {
         msg = event.message.text;
         if (msg == '?' || '？') msg += ':';
         var tmp = msg.substring(0, msg.indexOf(':'));
-        var tmpdata = msg.substring(msg.indexOf(':')+1, msg.length);
+        var tmpdata = msg.substring(msg.indexOf(':')+1, msg.length-1);
         console.log("======="+tmpdata+"=====");
         switch (tmp) {
             case 'Location':
@@ -104,6 +120,7 @@ bot.on('message', function(event) {
                for (var i = 0 ; i < clientArray.length ; i++) {
                    if (clientArray[i].ID == clientID) {
                        clientArray[i].receiveMsg = tmpdata;
+                       clientArray[i].setWeather = tmpdata;
                        console.debug(clientID + " Change Data : " + clientArray[i].receiveMsg);
                    }
                }
@@ -167,16 +184,42 @@ app.listen(process.env.PORT || 8080, function () {
 	console.log('LineBot is running.');
 });
 
-function clientUser(ID, receiveMsg) {
+function clientUser(ID, receiveMsg, setWeather) {
     this.ID = ID;
     this.receiveMsg = receiveMsg;
+    this.setWeather = setWeather;
 }
 
 // 主動發送訊息給 Client App
-setTimeout(function() {
-    var sendMsg = myLineTemplate;
-    bot.push('U4575fdaaae002fb2b9b67be60354de7c', [sendMsg]);
-}, 1000);
+function pingWeb(){
+    var hosts = ['https://andyopbot.herokuapp.com/'];
+    hosts.forEach(function(host){
+        ping.sys.probe(host, function(isAlive){
+            var msg = isAlive ? 'host ' + host + ' is alive' : 'host ' + host + ' is dead';
+            console.log(msg);
+        });
+    });
+}
+
+setInterval(function(){
+    var now = new Date();
+    dateFormat.masks.hammerTime = 'HH';
+    var h = dateFormat(now, "hammerTime");
+    console.log(h);
+    if (h == '07' || h == '08'|| h == '09'|| h == '10'|| h == '11'|| h == '12'|| h == '13'|| h == '14'|| h == '15'|| h == '16'|| h == '17'|| h == '18'|| h == '19'|| h == '20'|| h == '21'|| h == '22'|| h == '23'){
+        //pingWeb();
+        rp2(weatherOpt)
+        .then(function (repos) {
+            var weatherData3 = readWEATHER3(repos);
+            var temperature = weatherData3.Temperature;
+            var temperature = temperature.substring(0, temperature.indexOf('('));
+            if (temperature > 25)
+            bot.push('U4575fdaaae002fb2b9b67be60354de7c', temperature);
+        })
+
+    }
+}, 2400)
+
 
 
 function sendPMMsg(ID, city, locationName) {

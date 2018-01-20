@@ -1,6 +1,5 @@
 var linebot = require('linebot'),
     express = require('express'),
-    ping = require('ping'),
     dateFormat = require('dateformat');
 
 var SITE_NAME = '西屯', SITE_NAME2 = '', SITE_NAME3 = '';

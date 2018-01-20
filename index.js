@@ -218,7 +218,7 @@ setInterval(function(){
         })
 
     }
-}, 2400)
+}, 2400000)
 
 
 

@@ -23,7 +23,7 @@ var myLineTemplate={
     altText: 'this is a confirm template',
     template: {
         type: 'buttons',
-        text: '按下選單可以查看目前PM2.5！\n輸入？即可再次出現選單',
+        text: '按下選單可以查看目前PM2.5！\n輸入？即可再次出現選單\n點選之後請等待幾秒鐘的運算時間',
         actions: [{
             type: 'postback',
             label: '臺南市',

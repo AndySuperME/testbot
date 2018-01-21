@@ -2,7 +2,7 @@ var linebot = require('linebot'),
     express = require('express'),
     dateFormat = require('dateformat');
 
-var SITE_NAME = '西屯', SITE_NAME2 = '', SITE_NAME3 = '';
+var SITE_NAME = '臺南', SITE_NAME2 = '', SITE_NAME3 = '';
 
 var country, siteName, pmData, aqiStatus, lName, temp, humd, weather, date;
 var setNotifylocation;

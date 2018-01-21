@@ -226,7 +226,7 @@ setInterval(function(){
             //if (temperature > 25)
             bot.push('U4575fdaaae002fb2b9b67be60354de7c', temperature);
         })
-}, 1200000)
+}, 300000)
 
 
 

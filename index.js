@@ -205,6 +205,7 @@ setInterval(function(){
     dateFormat.masks.hammerTime = 'HH';
     var h = dateFormat(now, "hammerTime");
     console.log(h);
+    /*
     if (h == '07' || h == '08'|| h == '09'|| h == '10'|| h == '11'|| h == '12'|| h == '13'|| h == '14'|| h == '15'|| h == '16'|| h == '17'|| h == '18'|| h == '19'|| h == '20'|| h == '21'|| h == '22'|| h == '23'){
         //pingWeb();
         rp2(weatherOpt)
@@ -215,9 +216,17 @@ setInterval(function(){
             if (temperature > 25)
             bot.push('U4575fdaaae002fb2b9b67be60354de7c', temperature);
         })
-
     }
-}, 2400000)
+    */
+        rp2(weatherOpt)
+        .then(function (repos) {
+            var weatherData3 = readWEATHER3(repos);
+            var temperature = weatherData3.Temperature;
+            var temperature = temperature.substring(0, temperature.indexOf('('));
+            //if (temperature > 25)
+            bot.push('U4575fdaaae002fb2b9b67be60354de7c', temperature);
+        })
+}, 1200000)
 
 
 

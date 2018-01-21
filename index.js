@@ -163,12 +163,12 @@ app.set('view engine', 'ejs');
 app.get('/',function(req,res){
     rp(aqiOpt)
     .then(function (repos) {
-        res.render('index', {AQI:readAQI(repos)});
+        res.send('Start');
     })
     .catch(function (err) {
 		res.send("無法取得空氣品質資料～");
     });
-    
+    /*
     rp2(weatherOpt)
     .then(function (repos) {
         res.render('index', {WEATHER:readWEATHER(repos)});
@@ -176,6 +176,7 @@ app.get('/',function(req,res){
     .catch(function (err) {
 		res.send("無法取得天氣資料～");
     });
+    */
 });
 
 // 在 localhost 走 8080 port

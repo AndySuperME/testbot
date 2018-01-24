@@ -53,10 +53,10 @@ var myLineCarouselTemplate={
 				label: '設置地點',
 				data: '3:設置地點'
 			}, {
-				type: 'uri',
-				label: 'View detail',
-				uri: 'http://example.com/page/123'
-            		}]
+                type: 'uri',
+                label: 'View detail',
+                uri: 'http://example.com/page/123'
+            }]
 		}]
 	}
 }
@@ -84,6 +84,7 @@ var myLineTemplate={
 };
 */
 var bot = linebot({
+   
     channelId: process.env.CHANNEL_ID,
 	channelSecret: process.env.CHANNEL_SECRET,
 	channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN
@@ -168,8 +169,13 @@ bot.on('postback', function (event) {
             event.reply('請直接回覆地點 \nP.S. 回覆前請先查看有哪些地點！！');
             bot.on('message', function (event1){
                 var userSendMsg = event1.message.text;
+                var profileName = '';
                 queryDatabase(event.source.userId, userSendMsg);
-                event1.reply('已設定地點於：' + userSendMsg);
+                event1.source.profile().then(function (profile) {
+                    event1.reply(profile.displayName + ' 您已設定地點於：' + userSendMsg);
+                }).catch(function (error) {
+                    // error
+                });
             })
             break;
         case '4':

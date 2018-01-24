@@ -68,10 +68,9 @@ function readWEATHER(repos) {
     return data;
 }
 
-function readWEATHER3(repos) {
-    let data;    
-    SITE_NAME3 = clientArray[0].setWeather;
-    console.log("       pppp   " + SITE_NAME3);
+function readWEATHER3(repos, sqlname) {
+    let data; 
+    SITE_NAME3 = sqlname;   
     for (i in repos) {
         if (repos[i].SiteName == SITE_NAME3) {
             data = repos[i];
@@ -103,38 +102,9 @@ bot.on('message', function(event) {
         var tmpdata = msg.substring(msg.indexOf(':')+1, msg.length-1);
         console.log("======="+tmpdata+"=====");
         switch (tmp) {
-            case 'Location':
-                try {
-                    console.debug("Send Message:" + tmpdata);
-                    for (var i = 0 ; i < clientArray.length ; i++) {
-                        if (clientArray[i].ID == clientID) {
-                            sendPMMsg(clientArray[i].ID, tmpdata);
-                        }
-                    }
-                } catch (error) {
-                }
+            case 'SetLocation': 
+                queryDatabase(clientID, tmpdata);
                 break;
-            case 'SetLocation':
-               // var object = new clientUser(clientID, tmpdata);
-               for (var i = 0 ; i < clientArray.length ; i++) {
-                   if (clientArray[i].ID == clientID) {
-                       clientArray[i].receiveMsg = tmpdata;
-                       clientArray[i].setWeather = tmpdata;
-                       console.debug(clientID + " Change Data : " + clientArray[i].receiveMsg);
-                   }
-               }
- 
-                break;
-            case 'Current Location':
-                
-                for (var i = 0 ; i < clientArray.length ; i++) {
-                    if (clientArray[i].ID == clientID) {
-                        sendPMMsg(clientArray[i].ID, clientArray[i].receiveMsg);
-                        console.debug("+++++++++++", clientArray[i].receiveMsg);
-                    }
-                }
-                break;
-
             case '？':
                 event.reply(myLineTemplate);
                 break;
@@ -184,12 +154,6 @@ app.listen(process.env.PORT || 8080, function () {
 	console.log('LineBot is running.');
 });
 
-function clientUser(ID, receiveMsg, setWeather) {
-    this.ID = ID;
-    this.receiveMsg = receiveMsg;
-    this.setWeather = setWeather;
-}
-
 // 主動發送訊息給 Client App
 function pingWeb(){
     var hosts = ['https://andyopbot.herokuapp.com/'];
@@ -205,7 +169,7 @@ setInterval(function(){
     var now = new Date();
     dateFormat.masks.hammerTime = 'HH';
     var h = dateFormat(now, "hammerTime");
-    console.log(h);
+    //console.log(h);
     /*
     if (h == '07' || h == '08'|| h == '09'|| h == '10'|| h == '11'|| h == '12'|| h == '13'|| h == '14'|| h == '15'|| h == '16'|| h == '17'|| h == '18'|| h == '19'|| h == '20'|| h == '21'|| h == '22'|| h == '23'){
         //pingWeb();
@@ -219,15 +183,8 @@ setInterval(function(){
         })
     }
     */
-        rp2(weatherOpt)
-        .then(function (repos) {
-            var weatherData3 = readWEATHER3(repos);
-            var temperature = weatherData3.Temperature;
-            var temperature = temperature.substring(0, temperature.indexOf('('));
-            //if (temperature > 25)
-            bot.push('U4575fdaaae002fb2b9b67be60354de7c', temperature);
-        })
-}, 300000)
+    alertWeather();
+}, 600000)
 
 
 
@@ -264,4 +221,114 @@ function sendPMMsg(ID, city, locationName) {
                 '\n更新時間：' + date);
                 console.log('2 : ' + temp)
         })
+}
+
+
+const pg = require('pg');
+const config = {
+    host: 'ec2-54-235-73-241.compute-1.amazonaws.com',
+    // Do not hard code your username and password.
+    // Consider using Node environment variables.
+    user: 'blmgdbiogogktw',     
+    password: 'fb1b81c82613869e5b79f88d6f729d2002f535ff5fa1821ef7e5921316e2a2e6',
+    database: 'd4lkog9d8vml1i',
+    port: 5432,
+    ssl: true
+};
+
+const client = new pg.Client(config);
+
+connectSql();
+function connectSql() {
+    client.connect(err => {
+        if (err) throw err;
+    });
+}
+
+
+function queryDatabase(insertID, insertMsg) {
+
+    console.log(`Running query to PostgreSQL server: ${config.host}`);
+
+    var query = "SELECT * FROM inventory WHERE id = " + "'" + insertID + "'";
+
+    client.query(query)
+        .then(res => {
+            //exists
+            if (res.rowCount != 0) {
+                const rows = res.rows;
+                rows.map(row => {
+                    //console.log(`Read: ${JSON.stringify(row)}`);
+                    //update sql
+                    updataqueryDatabase(insertID, insertMsg);
+                    
+                });
+            }
+            //no exists
+            else {
+                //insert into sql
+                query = `INSERT INTO inventory (id, name) VALUES (` + "'" + insertID + "'" + "," + "'" + insertMsg + "'" + ")";
+                queryInsertDatabase(query);
+            }
+
+        })
+        .catch(err => {
+            console.log(err);
+        });
+}
+
+function queryInsertDatabase(InsertQuery) {
+    var query = InsertQuery;
+    client
+        .query(query)
+        .then(() => {
+            console.log('Insert successfully!');
+           // client.end(console.log('Closed client connection'));
+        })
+        .catch(err => console.log(err))
+        .then(() => {
+            console.log('Finished execution, exiting now');
+        });
+}
+
+
+function updataqueryDatabase(insertID, insertMsg) {
+    const query = "UPDATE inventory SET name=" + "'" + insertMsg + "'" +" WHERE id = " + "'" + insertID + "'" + ";";
+
+    client
+        .query(query)
+        .then(result => {
+            console.log('Update completed');
+            console.log(`Rows affected: ${result.rowCount}`);
+            //process.exit();
+            console.log("SQL UPDATE MESSQGE : " + insertMsg);
+        })
+        .catch(err => {
+            console.log(err);
+            throw err;
+        });
+}
+
+function alertWeather() {
+    const query = 'SELECT * FROM inventory;';
+    sqlArray = [];
+    client.query(query)
+        .then(res => {
+            const rows = res.rows;
+            rows.map(row => {
+                //SITE_NAME3 = row.name;
+                //var getID = row.id;
+                rp2(weatherOpt)
+                    .then(function (repos) {
+                        var weatherData3 = readWEATHER3(repos, row.name);
+                        var temperature = weatherData3.Temperature;
+                        var temperature = temperature.substring(0, temperature.indexOf('('));
+                        bot.push(row.id, temperature);    
+                       })        
+            });
+
+        })
+        .catch(err => {
+            console.log(err);
+        });
 }

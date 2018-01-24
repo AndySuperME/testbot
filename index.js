@@ -86,15 +86,7 @@ bot.on('message', function(event) {
     // 把收到訊息的 event 印出來
     console.log(event.source.userId);
     clientID = event.source.userId;
-    if (clientArray.length == 0) {
-        clientArray.push(new clientUser(clientID, '', ''));
-    }
-    for (var i = 0 ; i < clientArray.length ; i++) {
-        if (clientArray[i].ID != clientID){
-            clientArray.push(new clientUser(clientID, '', ''));
-        }
-    }
-    //console.debug("Push : ", clientArray[0].receiveMsg);
+
     if (event.message.type = 'text') {
         msg = event.message.text;
         if (msg == '?' || '？') msg += ':';

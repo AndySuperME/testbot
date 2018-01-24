@@ -54,9 +54,9 @@ var myLineCarouselTemplate={
 				data: '3:設置地點'
 			}, {
 				type: 'uri',
-				label: '設置通知溫度',
-				uri: '4:設置溫度'
-			}]
+				label: 'View detail',
+				uri: 'http://example.com/page/123'
+            		}]
 		}]
 	}
 }

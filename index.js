@@ -129,9 +129,9 @@ var clientID, clientArray = [];
 bot.on('message', function(event) {
     // 把收到訊息的 event 印出來
     console.log(event.source.userId);
+    console.debug(event.message);
     clientID = event.source.userId;
-
-    if (event.message.type = 'text') {
+    if (event.message.type == 'text') {
         msg = event.message.text;
         if (msg == '?' || '？') msg += ':';
         var tmp = msg.substring(0, msg.indexOf(':'));
@@ -150,6 +150,29 @@ bot.on('message', function(event) {
                 break;
         }
     }
+
+    if (event.message.type == 'location') {
+        var lt = event.message.latitude;
+        var lg = event.message.longitude;
+        var temp, humi;
+        new Promise(function(resolve){
+            helper.getCurrentWeatherByGeoCoordinates(lt, lg, (err, currentWeather) => {
+            if(err){
+                console.log(err);
+            }
+            else{
+                temp = currentWeather.main.temp;
+                temp -= 273.15;
+                temp = Math.round(temp *10) / 10;
+                humi = currentWeather.main.humidity;
+                console.log('Temperature: ' + temp + ' Humidity: ' + humi);
+            }
+            resolve();
+            });
+        }).then(function(){
+            event.reply("目前溫度：" + temp + "\n目前濕度：" + humi);
+        })
+    }
 });
 
 bot.on('postback', function (event) {
@@ -167,6 +190,7 @@ bot.on('postback', function (event) {
             break;
         case '3':
             event.reply('請直接回覆地點 \nP.S. 回覆前請先查看有哪些地點！！');
+            
             bot.on('message', function (event1){
                 var userSendMsg = event1.message.text;
                 var profileName = '';
@@ -192,22 +216,7 @@ app.post('/linewebhook', linebotParser);
 //app.post('/', linebotParser);
 app.set('view engine', 'ejs');
 app.get('/',function(req,res){
-    rp(aqiOpt)
-    .then(function (repos) {
-        res.send('Start');
-    })
-    .catch(function (err) {
-		res.send("無法取得空氣品質資料～");
-    });
-    /*
-    rp2(weatherOpt)
-    .then(function (repos) {
-        res.render('index', {WEATHER:readWEATHER(repos)});
-    })
-    .catch(function (err) {
-		res.send("無法取得天氣資料～");
-    });
-    */
+    res.send('Start');
 });
 
 // 在 localhost 走 8080 port
@@ -215,16 +224,6 @@ app.listen(process.env.PORT || 8080, function () {
 	console.log('LineBot is running.');
 });
 
-// 主動發送訊息給 Client App
-function pingWeb(){
-    var hosts = ['https://andyopbot.herokuapp.com/'];
-    hosts.forEach(function(host){
-        ping.sys.probe(host, function(isAlive){
-            var msg = isAlive ? 'host ' + host + ' is alive' : 'host ' + host + ' is dead';
-            console.log(msg);
-        });
-    });
-}
 
 setInterval(function(){
     var now = new Date();
@@ -393,3 +392,12 @@ function alertWeather() {
             console.log(err);
         });
 }
+
+const OpenWeatherMapHelper = require("openweathermap-node");
+
+const helper = new OpenWeatherMapHelper(
+    {
+        APPID: '16b8c42d665cb0410dab109736c1c20d',
+        units: "metric"
+    }
+);

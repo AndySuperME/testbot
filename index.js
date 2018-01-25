@@ -24,8 +24,8 @@ var myLineCarouselTemplate={
 	template: {
 		type: 'carousel',
 		columns: [{
-			thumbnailImageUrl: 'https://example.com/bot/images/item1.jpg',
-			title: 'this is menu',
+			thumbnailImageUrl: 'https://dynamicmedia.zuza.com/zz/m/original_/3/d/3d553796-0322-4e21-b100-20ca39ca3494/hot_sun_cooling___Gallery.jpg',
+			title: '天氣狀況',
 			text: '按下選單可以查看目前PM2.5！\n輸入？即可再次出現選單\n點選之後請等待幾秒鐘的運算時間',
 			actions: [{
                 type: 'postback',
@@ -41,7 +41,7 @@ var myLineCarouselTemplate={
                 data: '1:左營,高雄',
             }]
 		}, {
-			thumbnailImageUrl: 'https://example.com/bot/images/item2.jpg',
+			thumbnailImageUrl: 'https://i.imgur.com/xQF5dZT.jpg',
 			title: '設定通知地點/溫度',
 			text: 'description',
 			actions: [{
@@ -53,9 +53,9 @@ var myLineCarouselTemplate={
 				label: '設置地點',
 				data: '3:設置地點'
 			}, {
-                type: 'uri',
-                label: 'View detail',
-                uri: 'http://example.com/page/123'
+                type: 'postback',
+                label: '設置通知時間',
+                data: '4:設置時間'
             }]
 		}]
 	}
@@ -144,34 +144,32 @@ bot.on('message', function(event) {
             case '？':
                 event.reply(myLineCarouselTemplate);
                 break;
-
             case '?':
                 event.reply(myLineCarouselTemplate);
+                break;
+            case '地點':
+                queryDatabase(clientID, tmpdata);
+                event.source.profile().then(function (profile) {
+                    event.reply(profile.displayName + ' 您已設定地點於：' + tmpdata);
+                }).catch(function (error) {
+                    // error
+                });
+                break;
+            case '時間':
+                event.source.profile().then(function (profile) {
+                    event.reply(profile.displayName + ' 您已設定通知時間於：' + tmpdata);
+                }).catch(function (error) {
+                    // error
+                });
+                break;
+            case 'getDataBaseData':
+                getDataBaseData(event);
                 break;
         }
     }
 
     if (event.message.type == 'location') {
-        var lt = event.message.latitude;
-        var lg = event.message.longitude;
-        var temp, humi;
-        new Promise(function(resolve){
-            helper.getCurrentWeatherByGeoCoordinates(lt, lg, (err, currentWeather) => {
-            if(err){
-                console.log(err);
-            }
-            else{
-                temp = currentWeather.main.temp;
-                temp -= 273.15;
-                temp = Math.round(temp *10) / 10;
-                humi = currentWeather.main.humidity;
-                console.log('Temperature: ' + temp + ' Humidity: ' + humi);
-            }
-            resolve();
-            });
-        }).then(function(){
-            event.reply("目前溫度：" + temp + "\n目前濕度：" + humi);
-        })
+        getCurrentWeatherByGeoCoordinates(event);
     }
 });
 
@@ -189,21 +187,10 @@ bot.on('postback', function (event) {
             event.reply('南沙島 /東沙島 /馬祖 /金門 /東吉島 /澎湖 /蘭嶼 /大武 /臺東 /成功 /花蓮 /恆春 /高雄 /臺南 /嘉義 /阿里山 /玉山 /日月潭 /梧棲 /臺中 /新竹 /新屋 /板橋 /臺北 /陽明山 /鞍部 /蘇澳 /宜蘭 /基隆 /彭佳嶼');
             break;
         case '3':
-            event.reply('請直接回覆地點 \nP.S. 回覆前請先查看有哪些地點！！');
-            
-            bot.on('message', function (event1){
-                var userSendMsg = event1.message.text;
-                var profileName = '';
-                queryDatabase(event.source.userId, userSendMsg);
-                event1.source.profile().then(function (profile) {
-                    event1.reply(profile.displayName + ' 您已設定地點於：' + userSendMsg);
-                }).catch(function (error) {
-                    // error
-                });
-            })
+            event.reply('請直接回覆地點 \n EX: 地點:臺南(請勿使用全形：) \n P.S. 回覆前請先查看有哪些地點！！');   
             break;
         case '4':
-            
+            event.reply('請直接回覆通知時間 \n EX: 時間:08 (請勿使用全形： 請以小時填寫)')
             break;
     }
 
@@ -246,8 +233,6 @@ setInterval(function(){
     alertWeather();
 }, 600000)
 
-
-
 function sendPMMsg(ID, city, locationName) {
     SITE_NAME = city;
     SITE_NAME2 = locationName;
@@ -283,7 +268,7 @@ function sendPMMsg(ID, city, locationName) {
         })
 }
 
-
+/*---------------------------------------------------------*/
 const pg = require('pg');
 const config = {
     host: 'ec2-54-235-73-241.compute-1.amazonaws.com',
@@ -297,14 +282,12 @@ const config = {
 };
 
 const client = new pg.Client(config);
-
 connectSql();
 function connectSql() {
     client.connect(err => {
         if (err) throw err;
     });
 }
-
 
 function queryDatabase(insertID, insertMsg) {
 
@@ -320,8 +303,7 @@ function queryDatabase(insertID, insertMsg) {
                 rows.map(row => {
                     //console.log(`Read: ${JSON.stringify(row)}`);
                     //update sql
-                    updataqueryDatabase(insertID, insertMsg);
-                    
+                    updataqueryDatabase(insertID, insertMsg);                   
                 });
             }
             //no exists
@@ -330,7 +312,6 @@ function queryDatabase(insertID, insertMsg) {
                 query = `INSERT INTO inventory (id, name) VALUES (` + "'" + insertID + "'" + "," + "'" + insertMsg + "'" + ")";
                 queryInsertDatabase(query);
             }
-
         })
         .catch(err => {
             console.log(err);
@@ -351,17 +332,15 @@ function queryInsertDatabase(InsertQuery) {
         });
 }
 
-
 function updataqueryDatabase(insertID, insertMsg) {
     const query = "UPDATE inventory SET name=" + "'" + insertMsg + "'" +" WHERE id = " + "'" + insertID + "'" + ";";
-
     client
         .query(query)
         .then(result => {
             console.log('Update completed');
             console.log(`Rows affected: ${result.rowCount}`);
             //process.exit();
-            console.log("SQL UPDATE MESSQGE : " + insertMsg);
+            console.log("SQL UPDATE MESSAGE : " + insertMsg);
         })
         .catch(err => {
             console.log(err);
@@ -369,6 +348,33 @@ function updataqueryDatabase(insertID, insertMsg) {
         });
 }
 
+function getDataBaseData(event) {
+    new Promise(function (resolve) {
+        const query = "SELECT * FROM inventory WHERE id = " + "'" + clientID + "'";
+            client.query(query)
+                .then(res => {
+                    const rows = res.rows;
+                    console.log(res.rowCount);
+                    rows.map(row => {
+                        //console.log(`Read: ${JSON.stringify(row)}`);
+                        var data = row.name;
+                        console.log(data);
+                        resolve(data);
+                    });
+                })
+                .catch(err => {
+                    console.log(err);
+                });
+    }).then(function(value){
+            event.source.profile().then(function(profile){
+            event.reply(profile.displayName + " 您已設定區域於 " + value);
+        })
+    })
+}
+/*---------------------------------------------------------*/
+
+
+/*---------------------------------------------------------*/
 function alertWeather() {
     const query = 'SELECT * FROM inventory;';
     sqlArray = [];
@@ -386,13 +392,15 @@ function alertWeather() {
                         bot.push(row.id, temperature);    
                        })        
             });
-
         })
         .catch(err => {
             console.log(err);
         });
 }
+/*---------------------------------------------------------*/
 
+
+/*---------------------------------------------------------*/
 const OpenWeatherMapHelper = require("openweathermap-node");
 
 const helper = new OpenWeatherMapHelper(
@@ -401,3 +409,29 @@ const helper = new OpenWeatherMapHelper(
         units: "metric"
     }
 );
+
+function getCurrentWeatherByGeoCoordinates(event) {
+    var lt = event.message.latitude;
+        var lg = event.message.longitude;
+        var temp = null, humi = null, state = null;
+        new Promise(function(resolve){
+            helper.getCurrentWeatherByGeoCoordinates(lt, lg, (err, currentWeather) => {
+            if(err){
+                console.log(err);
+            }
+            else{
+                temp = currentWeather.main.temp;
+                temp -= 273.15;
+                temp = Math.round(temp *10) / 10;
+                humi = currentWeather.main.humidity;
+                state = JSON.stringify(currentWeather.weather);
+                state = state.substring(state.indexOf('description":"') + 13, state.indexOf(',"icon'));
+                console.log('Temperature: ' + temp + ' Humidity: ' + humi + ' State: ' + state);
+            }
+            resolve();
+            });
+        }).then(function(){
+            event.reply("目前溫度：" + temp + "\n目前濕度：" + humi + "\n目前狀態：" + state);
+        })
+}
+/*---------------------------------------------------------*/

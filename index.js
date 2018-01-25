@@ -60,29 +60,7 @@ var myLineCarouselTemplate={
 		}]
 	}
 }
-/*
-var myLineTemplate={
-    type: 'template',
-    altText: 'this is a confirm template',
-    template: {
-        type: 'buttons',
-        text: '按下選單可以查看目前PM2.5！\n輸入？即可再次出現選單\n點選之後請等待幾秒鐘的運算時間',
-        actions: [{
-            type: 'postback',
-            label: '臺南市',
-            data: '臺南,臺南',
-        }, {
-            type: 'postback',
-            label: '南投縣日月潭',
-            data: '南投,日月潭',
-        }, {
-            type: 'postback',
-            label: '高雄市左營',
-            data: '左營,高雄',
-        }]
-    }
-};
-*/
+
 var bot = linebot({
    
     channelId: process.env.CHANNEL_ID,
@@ -142,7 +120,7 @@ bot.on('message', function(event) {
                 queryDatabase(clientID, tmpdata);
                 break;
             case '？':
-                event.reply(myLineCarouselTemplate);
+                event.reply(movieTemplate);
                 break;
             case '?':
                 event.reply(myLineCarouselTemplate);
@@ -156,14 +134,22 @@ bot.on('message', function(event) {
                 });
                 break;
             case '時間':
+                /*
                 event.source.profile().then(function (profile) {
                     event.reply(profile.displayName + ' 您已設定通知時間於：' + tmpdata);
                 }).catch(function (error) {
                     // error
                 });
+                */
                 break;
             case 'getDataBaseData':
                 getDataBaseData(event);
+                break;
+            case 'M':
+                queryMovieDatabase(tmpdata);
+                movieData.then(function(object){
+                    bot.push(event.source.userId ,object.name + "\n" + object.url + "\n" + object.descri + "\n" + object.infor);  
+                })       
                 break;
         }
     }
@@ -191,6 +177,17 @@ bot.on('postback', function (event) {
             break;
         case '4':
             event.reply('請直接回覆通知時間 \n EX: 時間:08 (請勿使用全形： 請以小時填寫)')
+            break;
+        case '5':
+            queryMovieTimeDatabase("02");
+            movieTimeData.then(function(object){
+                for (var i = 0 ; i < object.length ; i++) {
+                    bot.push(event.source.userId ,object[i].name + "\n" + object[i].url + "\n" + object[i].descri + "\n" + object[i].infor);
+                }
+            })
+            break;
+        case '6':
+            event.reply('輸入電影關鍵字來查詢 \n EX：M:阿凡達 （輸入阿即可）\nP.S. 記得使用半形:');
             break;
     }
 
@@ -434,4 +431,65 @@ function getCurrentWeatherByGeoCoordinates(event) {
             event.reply("目前溫度：" + temp + "\n目前濕度：" + humi + "\n目前狀態：" + state);
         })
 }
+/*---------------------------------------------------------*/
+var movieData;
+function queryMovieDatabase(movieName){
+    movieData = new Promise(function(resolve){
+        const query = "SELECT * FROM movie WHERE name Like '%" + movieName + "%'";
+        client.query(query)
+            .then(res => {
+                const rows = res.rows;
+                //console.log(res.rowCount);
+
+                rows.map(row => {
+                    //console.log(`Read: ${JSON.stringify(row)}`);
+                    console.log(row);
+                    resolve(row);
+                });
+            })
+            .catch(err => {
+                console.log(err);
+            });
+    })
+}
+
+var movieTimeData;
+function queryMovieTimeDatabase(movieTime){
+    var movieArray = [], k = 0;;
+    movieTimeData = new Promise(function(resolve){
+        const query = "SELECT * FROM movie WHERE time Like '%" + movieTime + "%'";
+        client.query(query)
+            .then(res => {
+                const rows = res.rows;
+                //console.log(res.rowCount);
+                rows.map(row => {
+                    //console.log(`Read: ${JSON.stringify(row)}`);
+                    movieArray[k++] = row;
+                    //console.log(row);
+                    resolve(movieArray);
+                });
+            })
+            .catch(err => {
+                console.log(err);
+            });
+    })
+}
+
+var movieTemplate={
+    type: 'template',
+    altText: 'this is a confirm template',
+    template: {
+        type: 'buttons',
+        text: '請先按下',
+        actions: [{
+            type: 'postback',
+            label: '近期電影',
+            data: '5:movieDate',
+        }, {
+            type: 'postback',
+            label: '輸入電影關鍵字',
+            data: '6:input',
+        }]
+    }
+};
 /*---------------------------------------------------------*/

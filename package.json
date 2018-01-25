@@ -11,7 +11,8 @@
     "request": "^2.83.0",
     "request-promise": "^4.2.2",
     "pg": "^7.4.1",
-    "dateformat": "^3.0.2"
+    "dateformat": "^3.0.2",
+    "openweathermap-node": "^1.1.2"
   },
   "keywords": [
     "linebot",

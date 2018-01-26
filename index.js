@@ -174,7 +174,7 @@ app.listen(process.env.PORT || 8080, function () {
 
 setInterval(function(){
     alertWeather();
-}, 600000)
+}, 3000)
 
 function sendPMMsg(ID, city, locationName) {
     SITE_NAME = city;
@@ -291,6 +291,22 @@ function updataqueryDatabase(insertID, insertMsg) {
         });
 }
 
+function updataAlreadyDatabase(insertID, already) {
+    const query = "UPDATE inventory SET already=" + "'" + already + "'" +" WHERE id = " + "'" + insertID + "'" + ";";
+    client
+        .query(query)
+        .then(result => {
+            console.log('Update completed');
+            console.log(`Rows affected: ${result.rowCount}`);
+            //process.exit();
+            console.log("SQL UPDATE MESSAGE : " + already);
+        })
+        .catch(err => {
+            console.log(err);
+            throw err;
+        });
+}
+
 function getDataBaseData(event) {
     new Promise(function (resolve) {
         const query = "SELECT * FROM inventory WHERE id = " + "'" + clientID + "'";
@@ -333,18 +349,20 @@ function alertWeather() {
                         var humidity = weatherData3.Moisture;
                         var weather = weatherData3.Weather;
                         var date = weatherData3.DataCreationDate;
-                        var t = now.getHours()+8 + ':' + now.getMinutes();
+                        var t = now.getHours()+2 + ':' + now.getMinutes();
                         var tmp = t.substring(0, t.indexOf(':'));
                         if (tmp.length == 1) {
                             t = '0' + t;
                         }
-                        
-                        if (t == row.alerttime){
+                    
+                        if (t == row.alerttime && row.already != 'true'){
+                            updataAlreadyDatabase(row.id, "true");
                             bot.push(row.id, "目前溫度：" + temperature + "\n" +
                                              "目前濕度：" + humidity + "\n" +
                                              "目前狀態：" + weather + "\n" +
                                              "更新時間：" + date
                             );
+                            setTimeout(function(){updataAlreadyDatabase(row.id, "false");}, 60000);
                         }
                         
                     })        

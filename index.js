@@ -349,7 +349,7 @@ function alertWeather() {
                         var humidity = weatherData3.Moisture;
                         var weather = weatherData3.Weather;
                         var date = weatherData3.DataCreationDate;
-                        var t = now.getHours()+2 + ':' + now.getMinutes();
+                        var t = now.getHours()+8 + ':' + now.getMinutes();
                         var tmp = t.substring(0, t.indexOf(':'));
                         if (tmp.length == 1) {
                             t = '0' + t;

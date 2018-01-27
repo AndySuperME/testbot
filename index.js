@@ -343,19 +343,19 @@ function alertWeather() {
             rows.map(row => {
                 rp2(weatherOpt)
                     .then(function (repos) {
-                        var weatherData3 = readWEATHER3(repos, row.name);
-                        var temperature = weatherData3.Temperature;
-                        var temperature = temperature.substring(0, temperature.indexOf('('));
-                        var humidity = weatherData3.Moisture;
-                        var weather = weatherData3.Weather;
-                        var date = weatherData3.DataCreationDate;
-                        var t = now.getHours()+8 + ':' + now.getMinutes();
-                        var tmp = t.substring(0, t.indexOf(':'));
-                        if (tmp.length == 1) {
-                            t = '0' + t;
-                        }
                     
                         if (t == row.alerttime && row.already != 'true'){
+                            var weatherData3 = readWEATHER3(repos, row.name);
+                            var temperature = weatherData3.Temperature;
+                            var temperature = temperature.substring(0, temperature.indexOf('('));
+                            var humidity = weatherData3.Moisture;
+                            var weather = weatherData3.Weather;
+                            var date = weatherData3.DataCreationDate;
+                            var t = now.getHours()+2 + ':' + now.getMinutes();
+                            var tmp = t.substring(0, t.indexOf(':'));
+                            if (tmp.length == 1) {
+                                t = '0' + t;
+                            }
                             updataAlreadyDatabase(row.id, "true");
                             bot.push(row.id, "目前溫度：" + temperature + "\n" +
                                              "目前濕度：" + humidity + "\n" +

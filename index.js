@@ -340,6 +340,7 @@ function alertWeather() {
     client.query(query)
         .then(res => {
             const rows = res.rows;
+            var weatherData3, temperature, date, humidity, weather;
             rows.map(row => {
                 var t = now.getHours()+8 + ':' + now.getMinutes();
                 var tmp = t.substring(0, t.indexOf(':'));
@@ -349,12 +350,12 @@ function alertWeather() {
                 if (t == row.alerttime && row.already != 'true'){
                     rp2(weatherOpt)
                     .then(function (repos) {
-                        var date = weatherData3.DataCreationDate;
-                        var weatherData3 = readWEATHER3(repos, row.name);
-                        var temperature = weatherData3.Temperature;
-                        var temperature = temperature.substring(0, temperature.indexOf('('));
-                        var humidity = weatherData3.Moisture;
-                        var weather = weatherData3.Weather;
+                        date = weatherData3.DataCreationDate;
+                        weatherData3 = readWEATHER3(repos, row.name);
+                        temperature = weatherData3.Temperature;
+                        temperature = temperature.substring(0, temperature.indexOf('('));
+                        humidity = weatherData3.Moisture;
+                        weather = weatherData3.Weather;
                     }) 
                     updataAlreadyDatabase(row.id, "true");
                     bot.push(row.id, "目前溫度：" + temperature + "\n" +

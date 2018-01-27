@@ -341,7 +341,7 @@ function alertWeather() {
         .then(res => {
             const rows = res.rows;
             rows.map(row => {
-                var t = now.getHours()+2 + ':' + now.getMinutes();
+                var t = now.getHours()+8 + ':' + now.getMinutes();
                 var tmp = t.substring(0, t.indexOf(':'));
                 if (tmp.length == 1) {
                     t = '0' + t;

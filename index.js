@@ -174,7 +174,7 @@ app.listen(process.env.PORT || 8080, function () {
 
 setInterval(function(){
     alertWeather();
-}, 3000)
+}, 30000)
 
 function sendPMMsg(ID, city, locationName) {
     SITE_NAME = city;

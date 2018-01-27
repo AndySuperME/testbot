@@ -341,7 +341,6 @@ function alertWeather() {
         .then(res => {
             const rows = res.rows;
             rows.map(row => {
-                var date = weatherData3.DataCreationDate;
                 var t = now.getHours()+2 + ':' + now.getMinutes();
                 var tmp = t.substring(0, t.indexOf(':'));
                 if (tmp.length == 1) {
@@ -350,6 +349,7 @@ function alertWeather() {
                 if (t == row.alerttime && row.already != 'true'){
                     rp2(weatherOpt)
                     .then(function (repos) {
+                        var date = weatherData3.DataCreationDate;
                         var weatherData3 = readWEATHER3(repos, row.name);
                         var temperature = weatherData3.Temperature;
                         var temperature = temperature.substring(0, temperature.indexOf('('));

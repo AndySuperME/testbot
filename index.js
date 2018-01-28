@@ -336,34 +336,35 @@ function getDataBaseData(event) {
 /*---------------------------------------------------------*/
 function alertWeather() {
     var now = new Date();
+    var weatherData3, temperature, date, humidity, weather;
     const query = 'SELECT * FROM inventory;';
     client.query(query)
         .then(res => {
             const rows = res.rows;
-            var weatherData3, temperature, date, humidity, weather;
             rows.map(row => {
-                var t = now.getHours()+8 + ':' + now.getMinutes();
+                var t = now.getHours() + ':' + now.getMinutes();
                 var tmp = t.substring(0, t.indexOf(':'));
                 if (tmp.length == 1) {
                     t = '0' + t;
                 }
                 if (t == row.alerttime && row.already != 'true'){
+                    console.log('1')
+                    updataAlreadyDatabase(row.id, "true");
                     rp2(weatherOpt)
                     .then(function (repos) {
-                        date = weatherData3.DataCreationDate;
                         weatherData3 = readWEATHER3(repos, row.name);
                         temperature = weatherData3.Temperature;
                         temperature = temperature.substring(0, temperature.indexOf('('));
                         humidity = weatherData3.Moisture;
                         weather = weatherData3.Weather;
-                    }) 
-                    updataAlreadyDatabase(row.id, "true");
-                    bot.push(row.id, "目前溫度：" + temperature + "\n" +
-                                     "目前濕度：" + humidity + "\n" +
-                                     "目前狀態：" + weather + "\n" +
-                                     "更新時間：" + date
-                    );
-                    setTimeout(function(){updataAlreadyDatabase(row.id, "false");}, 60000);
+                        date = weatherData3.DataCreationDate;
+                        bot.push(row.id, "目前溫度：" + temperature + "\n" +
+                                        "目前濕度：" + humidity + "\n" +
+                                        "目前狀態：" + weather + "\n" +
+                                        "更新時間：" + date
+                                    );
+                        setTimeout(function(){updataAlreadyDatabase(row.id, "false");}, 60000);
+                        }) 
                 }       
             });
         })
